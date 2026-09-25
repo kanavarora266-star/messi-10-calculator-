@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messi 10 Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#bfe9ff,#fff,#a9dcf7);font-family:Arial,Helvetica,sans-serif}
+.card{width:min(420px,100%);background:linear-gradient(145deg,#dff5ff,#fff,#c9edff);border:3px solid #49afe5;border-radius:28px;padding:20px;position:relative;overflow:hidden;box-shadow:0 15px 35px #063b6330}
+.head{display:flex;align-items:center;justify-content:space-between}
+.title{font-weight:1000;font-style:italic;text-transform:uppercase;color:#063b63;font-size:25px;line-height:.9}
+.ten{font:italic 100px Impact,'Arial Black',sans-serif;color:#fff;-webkit-text-stroke:4px #063b63;text-shadow:5px 5px #49afe5;line-height:.7;transform:skew(-8deg)}
+.sun{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:55px;color:#f2c33d;opacity:.75}
+.display{margin:18px 0 14px;background:#063b63;color:#fff;border:3px solid #8ed9ff;border-radius:19px;padding:15px;text-align:right}
+.expr{min-height:20px;color:#bfeaff;font-size:13px;overflow-wrap:anywhere}
+.val{min-height:48px;font:italic 38px Impact,'Arial Black',sans-serif;overflow-wrap:anywhere}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.keys button{min-height:58px;border:2px solid #fff;border-radius:15px;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 3px 6px #063b6340}
+.keys button:nth-child(odd){background:#49afe5;color:#fff}
+.keys button:nth-child(even){background:#fff;color:#063b63}
+.keys .clear{background:#063b63!important;color:#fff!important}
+.keys .equal{background:#f5c842!important;color:#063b63!important}
+.zero{grid-column:span 2}
+.tag{text-align:center;margin-top:12px;font-size:11px;font-weight:900;color:#17577d;letter-spacing:1px}
+@media(max-width:400px){.card{padding:14px}.keys{gap:7px}.keys button{min-height:52px}.ten{font-size:82px}.title{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="sun">☀</div>
+<div class="head"><div class="title">MESSI<br>MAGIC<br>CALCULATOR</div><div class="ten">10</div></div>
+<div class="display" aria-live="polite"><div class="expr" id="expr">Ready for the next goal...</div><div class="val" id="value">0</div></div>
+<div class="keys" id="keys">
+<button class="clear" data-a="c">AC</button><button data-a="b">⌫</button><button data-v="%">%</button><button data-v="/">÷</button>
+<button data-v="7">7</button><button data-v="8">8</button><button data-v="9">9</button><button data-v="*">×</button>
+<button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="-">−</button>
+<button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="+">+</button>
+<button class="zero" data-v="0">0</button><button data-v=".">.</button><button class="equal" data-a="e">GOAL!</button>
+</div>
+<div id="history" style="margin-top:14px;background:#ffffffcc;border:2px solid #8ed9ff;border-radius:15px;padding:10px;max-height:150px;overflow:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <strong style="color:#063b63;">CALCULATION HISTORY</strong>
+        <button id="clearHistory" type="button" style="border:0;border-radius:9px;padding:6px 9px;background:#063b63;color:#fff;font-weight:800;cursor:pointer;">Clear</button>
+      </div>
+      <div id="historyList" style="margin-top:7px;color:#17577d;font-size:13px;">No calculations yet.</div>
+    </div>
+    <div class="tag">🇦🇷 ARGENTINA • MESSI • NUMBER 10</div>
+</div>
+<script>
+const keys=document.getElementById('keys'),value=document.getElementById('value'),expr=document.getElementById('expr');
+let x='';
+let history=[];
+const historyList=document.getElementById('historyList');
+const clearHistory=document.getElementById('clearHistory');
+function renderHistory(){
+  historyList.innerHTML=history.length
+    ? history.map((h,i)=>`<div style="padding:6px 3px;border-bottom:1px solid #d8effb;"><b>${i+1}.</b> ${h}</div>`).join('')
+    : 'No calculations yet.';
+}
+clearHistory.addEventListener('click',()=>{history=[];renderHistory()});
+function show(){value.textContent=x||'0';if(!x)expr.textContent='Ready for the next goal...'}
+function calculate(s){
+ if(!/^[0-9+\\-*/%.() ]+$/.test(s))throw Error();
+ let z=s.replace(/%/g,'/100');
+ if(/[+\\-*/.]$/.test(z))throw Error();
+ let n=Function('"use strict";return ('+z+')')();
+ if(!Number.isFinite(n))throw Error();
+ return Math.round(n*1e10)/1e10;
+}
+function add(a){
+ if(x==='Error')x='';
+ if(/[+*/\\-]$/.test(x)&&/[+*/\\-]/.test(a))x=x.slice(0,-1)+a;
+ else if(a==='.'&&x.split(/[+\\-*/]/).pop().includes('.'))return;
+ else x+=a;
+ show();
+}
+keys.addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.a==='c'){x='';show()}
+ else if(b.dataset.a==='b'){x=x.slice(0,-1);show()}
+ else if(b.dataset.a==='e'){
+   try{const old=x;x=String(calculate(x));expr.textContent=old+' =';value.textContent=x;history.unshift(old+' = '+x);if(history.length>20)history.pop();renderHistory()}
+   catch{x='Error';value.textContent='Error';expr.textContent='Shot missed — try again!'}
+ } else add(b.dataset.v);
+});
+document.addEventListener('keydown',e=>{
+ if(/[0-9.+\\-*/%]/.test(e.key)){add(e.key);e.preventDefault()}
+ else if(e.key==='Enter')keys.querySelector('[data-a="e"]').click();
+ else if(e.key==='Backspace')keys.querySelector('[data-a="b"]').click();
+ else if(e.key==='Escape')keys.querySelector('[data-a="c"]').click();
+});
+show();
+</script>
+</body>
+</html>
